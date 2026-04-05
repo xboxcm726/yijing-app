@@ -9,12 +9,12 @@
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
         #auth-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 1000; display: flex; flex-direction: column; justify-content: center; align-items: center; }
         input, select { padding: 12px; font-size: 16px; border: 1px solid #ccc; border-radius: 8px; margin: 5px; }
-        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 15px; }
+        .card { background: white; padding: 20px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); width: 100%; max-width: 500px; margin-bottom: 15px; box-sizing: border-box; }
         .hint-box { background: #E8F5E9; color: #1B5E20; padding: 10px; border-radius: 8px; font-weight: bold; font-size: 14px; margin-bottom: 15px; }
-        .btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; }
+        .btn { background: var(--primary); color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 18px; font-weight: bold; cursor: pointer; width: 100%; margin-bottom: 20px; }
         .yao-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #eee; }
-        #result-area { width: 100%; max-width: 600px; margin-top: 20px; }
-        canvas { background: white; width: 100%; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+        #result-area { width: 100%; max-width: 600px; }
+        canvas { background: white; width: 100%; border-radius: 12px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); display: none; }
     </style>
 </head>
 <body>
@@ -27,13 +27,12 @@
 
 <div id="main-app" style="display: none; width: 100%; max-width: 500px;">
     <div class="card">
-        <h3>【 Yi Jing-2 終極整合版 】</h3>
-        <div id="today-hint" class="hint-box">載入今日提示中...</div>
-        
-        <label>設定占卜日月柱：</label>
-        <div style="display: flex;">
+        <h3>【 Yi Jing-2 網頁版 】</h3>
+        <div id="today-hint" class="hint-box"></div>
+        <label>設定日月柱：</label>
+        <div style="display: flex; gap: 5px;">
             <select id="m-gan"></select><select id="m-zhi"></select>
-            <span style="margin: 0 10px; line-height: 40px;">/</span>
+            <span style="line-height: 45px;">/</span>
             <select id="d-gan"></select><select id="d-zhi"></select>
         </div>
     </div>
@@ -41,7 +40,6 @@
     <div class="card">
         <label>卜卦目的：</label>
         <input type="text" id="purpose" style="width: 90%;" value="測試">
-        
         <div id="yao-inputs"></div>
     </div>
 
@@ -56,41 +54,34 @@
     const GANS = ["甲", "乙", "丙", "丁", "戊", "己", "庚", "辛", "壬", "癸"];
     const ZHIS = ["子", "丑", "寅", "卯", "辰", "巳", "午", "未", "申", "酉", "戌", "亥"];
     const WX_MAP = {"子":"水","丑":"土","寅":"木","卯":"木","辰":"土","巳":"火","午":"火","未":"土","申":"金","酉":"金","戌":"土","亥":"水"};
-    
-    // 資料庫：校正後宮位與性質
+    const NAJIA = {"乾":["子","寅","辰","午","申","戌"],"震":["子","寅","辰","午","申","戌"],"坎":["寅","辰","午","申","戌","子"],"艮":["辰","午","申","戌","子","寅"],"坤":["未","巳","卯","丑","亥","酉"],"巽":["丑","亥","酉","未","巳","卯"],"離":["卯","丑","亥","酉","未","巳"],"兌":["巳","卯","丑","亥","酉","未"]};
+    const BG_MAP = {"111":"乾","000":"坤","110":"兌","101":"離","100":"震","011":"巽","010":"坎","001":"艮"};
     const HEX_DB = {
-        "地火明夷": ["水", 4, "遊魂"], "山風蠱": ["木", 3, "遊魂"], "兌為澤": ["金", 6, "六沖"],
-        "澤水困": ["金", 1, "六合"], "雷澤歸妹": ["金", 3, "歸魂"], "乾為天": ["金", 6, "六沖"]
+        "乾為天": ["金", 6, "六沖"], "天地否": ["金", 3, "六合"], "地火明夷": ["水", 4, "遊魂"], 
+        "山風蠱": ["木", 3, "歸魂"], "兌為澤": ["金", 6, "六沖"], "澤水困": ["金", 1, "六合"]
     };
 
-    // 啟動驗證 (密碼: 5015Pig1943)
     function checkAuth() {
-        const input = document.getElementById('pw-input').value;
-        if (btoa(input) === "NTAxNVBpZzE5NDM=") { // Base64 encode of your password
+        if (btoa(document.getElementById('pw-input').value) === "NTAxNVBpZzE5NDM=") {
             document.getElementById('auth-screen').remove();
             document.getElementById('main-app').style.display = 'block';
             initApp();
-        } else {
-            alert("密碼錯誤！");
-        }
+        } else { alert("密碼錯誤！"); }
     }
 
     function initApp() {
-        const selects = ['m-gan', 'd-gan', 'm-zhi', 'd-zhi'];
+        const selects = ['m-gan', 'm-zhi', 'd-gan', 'd-zhi'];
         selects.forEach(id => {
             const list = id.includes('gan') ? GANS : ZHIS;
             const el = document.getElementById(id);
             list.forEach(v => el.add(new Option(v, v)));
         });
 
-        // 生成爻輸入項
         const container = document.getElementById('yao-inputs');
-        ["六爻(上)", "五爻", "四爻", "三爻", "二爻", "初爻(下)"].forEach((name, i) => {
+        ["六爻", "五爻", "四爻", "三爻", "二爻", "初爻"].forEach((name, i) => {
             const row = document.createElement('div');
             row.className = 'yao-row';
-            row.innerHTML = `<span>${name}</span>
-                <select id="y-${5-i}"><option value="0">0 (×)</option><option value="1">1 (⚊)</option><option value="2" selected>2 (⚋)</option><option value="3">3 (○)</option></select>
-                <span id="s-${5-i}" style="color:blue; font-weight:bold; width:60px;">總和: 7</span>`;
+            row.innerHTML = `<span>${name}</span><select id="y-${5-i}"><option value="2">2 (⚋)</option><option value="1">1 (⚊)</option><option value="0">0 (×)</option><option value="3">3 (○)</option></select><span id="s-${5-i}">總和: 7</span>`;
             container.appendChild(row);
             row.querySelector('select').onchange = (e) => {
                 const h = parseInt(e.target.value);
@@ -98,35 +89,70 @@
             };
         });
 
-        // 今日提示邏輯
-        const base = new Date('2026-03-22');
-        const now = new Date();
+        const base = new Date('2026-03-22'), now = new Date();
         const diff = Math.floor((now - base) / (1000*60*60*24));
-        const d_gan = GANS[(GANS.indexOf("乙") + diff) % 10];
-        const d_zhi = ZHIS[(ZHIS.indexOf("未") + diff) % 12];
-        document.getElementById('today-hint').innerText = `【今日提示】${now.toLocaleDateString()}：辛卯月 / ${d_gan}${d_zhi}日`;
-        
-        document.getElementById('m-gan').value = "辛";
-        document.getElementById('m-zhi').value = "卯";
-        document.getElementById('d-gan').value = d_gan;
-        document.getElementById('d-zhi').value = d_zhi;
+        const dg = GANS[(GANS.indexOf("乙") + diff) % 10], dz = ZHIS[(ZHIS.indexOf("未") + diff) % 12];
+        document.getElementById('today-hint').innerText = `【今日提示】${now.toLocaleDateString()} 為 辛卯月 / ${dg}${dz}日`;
+        document.getElementById('m-gan').value = "辛"; document.getElementById('m-zhi').value = "卯";
+        document.getElementById('d-gan').value = dg; document.getElementById('d-zhi').value = dz;
     }
 
     function renderChart() {
         const canvas = document.getElementById('mainCanvas');
         const ctx = canvas.getContext('2d');
+        canvas.style.display = 'block';
         canvas.width = 1200; canvas.height = 1000;
-        ctx.fillStyle = "white"; ctx.fillRect(0,0,1200,1000);
-        ctx.fillStyle = "black"; ctx.font = "bold 40px Microsoft JhengHei";
+        ctx.fillStyle = "white"; ctx.fillRect(0, 0, 1200, 1000);
+
+        const yaos = [], changes = [];
+        for (let i = 0; i < 6; i++) {
+            const v = parseInt(document.getElementById(`y-${i}`).value);
+            yaos.push(v === 1 || v === 3 ? "1" : "0");
+            changes.push(v === 0 || v === 3);
+        }
+
+        const ln = BG_MAP[yaos.slice(0,3).join('')], un = BG_MAP[yaos.slice(3,6).join('')];
+        const hexName = un + ln; // 簡化名
+        const [wx, shi, type] = HEX_DB[hexName] || ["土", 1, "平卦"];
+
+        // 繪製標題
+        ctx.fillStyle = "black"; ctx.font = "bold 45px Microsoft JhengHei";
+        ctx.fillText(`【 卜卦結果 】 月：${document.getElementById('m-gan').value}${document.getElementById('m-zhi').value} / 日：${document.getElementById('d-gan').value}${document.getElementById('d-zhi').value}`, 60, 80);
         
-        ctx.fillText(`【 卜卦結果 - Yi Jing-2 】`, 50, 80);
-        ctx.font = "28px Microsoft JhengHei";
-        const m_val = document.getElementById('m-gan').value + document.getElementById('m-zhi').value;
-        const d_val = document.getElementById('d-gan').value + document.getElementById('d-zhi').value;
-        ctx.fillText(`月柱：${m_val} / 日柱：${d_val}`, 50, 140);
+        // 診斷框
+        ctx.fillStyle = "#FFF9C4"; ctx.strokeStyle = "#FBC02D";
+        ctx.fillRect(60, 120, 1080, 80); ctx.strokeRect(60, 120, 1080, 80);
+        ctx.fillStyle = "#BF360C"; ctx.font = "32px Microsoft JhengHei";
+        ctx.fillText(`卦性診斷：${type === '六沖' ? '【六沖】波動劇烈，主散主快' : '【平卦】事態平穩'}`, 100, 172);
+
+        // 繪製卦象
+        ctx.fillStyle = "black";
+        yaos.forEach((y, i) => {
+            const py = 850 - i * 80;
+            if (y === "1") ctx.fillRect(300, py, 250, 45);
+            else { ctx.fillRect(300, py, 100, 45); ctx.fillRect(450, py, 100, 45); }
+            if (changes[i]) {
+                ctx.fillStyle = "red"; ctx.font = "40px Arial";
+                ctx.fillText(y === "1" ? "○" : "×", 230, py + 35);
+                ctx.fillStyle = "black";
+            }
+        });
+
+        // 納甲
+        const dzs = NAJIA[ln].slice(0,3).concat(NAJIA[un].slice(3));
+        ctx.font = "36px Microsoft JhengHei";
+        dzs.forEach((dz, i) => {
+            const py = 850 - i * 80;
+            const diff = (["木","火","土","金","水"].indexOf(WX_MAP[dz]) - ["木","火","土","金","水"].indexOf(wx) + 5) % 5;
+            const lq = ["兄弟","子孫","妻財","官鬼","父母"][diff];
+            ctx.fillText(`${dz} ${lq}`, 650, py + 35);
+            if (i+1 === shi) ctx.fillStyle = "blue", ctx.fillText("世", 580, py + 35), ctx.fillStyle = "black";
+        });
+
+        ctx.font = "bold 60px Microsoft JhengHei";
+        ctx.fillText(`【 ${hexName} 】`, 450, 950);
         
-        // 應期與診斷 (略... 繪圖細節由 JS Canvas 實作)
-        alert("排盤圖已生成（此處演示核心邏輯整合成功）！");
+        window.scrollTo(0, document.body.scrollHeight);
     }
 </script>
 </body>
