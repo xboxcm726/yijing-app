@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yi Jing-2 專業排盤修正版</title>
+    <title>Yi Jing-2 專業排盤完美版</title>
     <style>
         :root { --primary: #1565C0; --bg: #f5f5f5; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
@@ -163,19 +163,20 @@
                 const clq = ["兄弟","子孫","妻財","官鬼","父母"][(["木","火","土","金","水"].indexOf(WX_MAP[cdzs[i]]) - ["木","火","土","金","水"].indexOf(wx) + 5) % 5];
                 txt += ` → ${cdzs[i]} ${clq} ${getEvo(dzs[i], cdzs[i], wx)}`;
             }
-            // 修正：向右偏移文字
-            ctx.fillText(txt, 800, py + 35);
-            if (i+1 === shi) { ctx.fillStyle="blue"; ctx.fillText("世", 720, py + 35); }
-            else if (i+1 === (shi>3?shi-3:shi+3)) { ctx.fillStyle="black"; ctx.fillText("應", 720, py + 35); }
+            // 修正：大幅度向右偏移文字，避免擠壓
+            ctx.fillText(txt, 850, py + 35);
+            if (i+1 === shi) { ctx.fillStyle="blue"; ctx.fillText("世", 780, py + 35); }
+            else if (i+1 === (shi>3?shi-3:shi+3)) { ctx.fillStyle="black"; ctx.fillText("應", 780, py + 35); }
         }
 
+        // 括號與說明文字向左微調
         ctx.strokeStyle = "blue"; ctx.lineWidth = 3;
-        ctx.beginPath(); ctx.moveTo(620, 400); ctx.lineTo(640, 400); ctx.lineTo(640, 650); ctx.lineTo(620, 650); ctx.stroke();
-        ctx.fillStyle="blue"; ctx.font="28px Microsoft JhengHei"; ctx.fillText(`上卦：${un_n}(${un_s})`, 660, 530);
+        ctx.beginPath(); ctx.moveTo(610, 400); ctx.lineTo(625, 400); ctx.lineTo(625, 650); ctx.lineTo(610, 650); ctx.stroke();
+        ctx.fillStyle="blue"; ctx.font="26px Microsoft JhengHei"; ctx.fillText(`上卦：${un_n}(${un_s})`, 635, 530);
         
         ctx.strokeStyle = "red";
-        ctx.beginPath(); ctx.moveTo(620, 670); ctx.lineTo(640, 670); ctx.lineTo(640, 920); ctx.lineTo(620, 920); ctx.stroke();
-        ctx.fillStyle="red"; ctx.fillText(`下卦：${ln_n}(${ln_s})`, 660, 800);
+        ctx.beginPath(); ctx.moveTo(610, 670); ctx.lineTo(625, 670); ctx.lineTo(625, 920); ctx.lineTo(610, 920); ctx.stroke();
+        ctx.fillStyle="red"; ctx.fillText(`下卦：${ln_n}(${ln_s})`, 635, 800);
 
         ctx.fillStyle = "black"; ctx.font = "bold 65px Microsoft JhengHei";
         ctx.fillText(`【 ${fullN} 】`, 500, 1020);
