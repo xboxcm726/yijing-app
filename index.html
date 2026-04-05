@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Yi Jing-2 專業排盤終極版</title>
+    <title>Yi Jing-2 專業排盤修正版</title>
     <style>
         :root { --primary: #1565C0; --bg: #f5f5f5; }
         body { font-family: "Microsoft JhengHei", sans-serif; background: var(--bg); margin: 0; padding: 10px; display: flex; flex-direction: column; align-items: center; }
@@ -120,10 +120,8 @@
         }
 
         const [ln_n, ln_s] = BG_INFO[yaos.slice(0,3).join('')], [un_n, un_s] = BG_INFO[yaos.slice(3,6).join('')];
-        const [cln_n, cln_s] = BG_INFO[cy_yaos.slice(0,3).join('')], [cun_n, cun_s] = BG_INFO[cy_yaos.slice(3,6).join('')];
         const [wx, shi, type, fullN] = HEX_DB[un_n + ln_n] || ["土", 1, "平卦", un_n + ln_n];
 
-        // 計算空亡
         const dg_i = GANS.indexOf(document.getElementById('d-gan').value), dz_i = ZHIS.indexOf(document.getElementById('d-zhi').value);
         const kw = [ZHIS[(dz_i - dg_i - 2 + 12) % 12], ZHIS[(dz_i - dg_i - 1 + 12) % 12]];
 
@@ -132,21 +130,19 @@
         ctx.fillStyle = "red"; ctx.font = "32px Microsoft JhengHei";
         ctx.fillText(`日期時間：${new Date().toLocaleString()} (旬空：${kw.join('')})`, 60, 135);
 
-        // 應期顯示
         ctx.fillStyle = "#1B5E20"; ctx.font = "28px Microsoft JhengHei";
         ctx.fillText(`● 填實月：${kw[0]}月 ● 填實日：${kw[0]}(未來) ● 沖實日：${ZHIS[(ZHIS.indexOf(kw[0])+6)%12]}(未來)`, 60, 185);
 
-        // 診斷框
         ctx.fillStyle = "#FFF9C4"; ctx.fillRect(60, 220, 1100, 70); ctx.strokeRect(60, 220, 1100, 70);
         ctx.fillStyle = "#BF360C"; ctx.font = "30px Microsoft JhengHei";
         ctx.fillText(`卦性診斷：${type === '六沖' ? '【六沖】波動劇烈，主散主快' : type === '遊魂' ? '【遊魂】主變動不安，宜動不宜守' : '【平卦】事態平穩'}`, 100, 265);
 
-        // 畫標籤
         ctx.fillStyle = "#5C85BB"; ctx.fillRect(60, 310, 150, 50); ctx.fillStyle="white"; ctx.fillText(`五行：${wx}`, 75, 345);
         if(type!=="平卦") { ctx.fillStyle = "#E67E22"; ctx.fillRect(230, 310, 150, 50); ctx.fillStyle="white"; ctx.fillText(type, 260, 345); }
 
-        // 繪製卦象與文字演化
         const dzs = NAJIA[ln_n].slice(0,3).concat(NAJIA[un_n].slice(3));
+        const cln_n = BG_INFO[cy_yaos.slice(0,3).join('')][0];
+        const cun_n = BG_INFO[cy_yaos.slice(3,6).join('')][0];
         const cdzs = NAJIA[cln_n].slice(0,3).concat(NAJIA[cun_n].slice(3));
 
         for (let i = 0; i < 6; i++) {
@@ -159,7 +155,6 @@
                 ctx.fillStyle = "red"; ctx.font = "40px Arial"; ctx.fillText(yaos[i] === "1" ? "○" : "×", 280, py + 35);
             }
 
-            // 納甲演化
             ctx.fillStyle = "black"; ctx.font = "36px Microsoft JhengHei";
             const kt = kw.includes(dzs[i]) ? "(空)" : "";
             const lq = ["兄弟","子孫","妻財","官鬼","父母"][(["木","火","土","金","水"].indexOf(WX_MAP[dzs[i]]) - ["木","火","土","金","水"].indexOf(wx) + 5) % 5];
@@ -168,12 +163,12 @@
                 const clq = ["兄弟","子孫","妻財","官鬼","父母"][(["木","火","土","金","水"].indexOf(WX_MAP[cdzs[i]]) - ["木","火","土","金","水"].indexOf(wx) + 5) % 5];
                 txt += ` → ${cdzs[i]} ${clq} ${getEvo(dzs[i], cdzs[i], wx)}`;
             }
-            ctx.fillText(txt, 750, py + 35);
-            if (i+1 === shi) { ctx.fillStyle="blue"; ctx.fillText("世", 680, py + 35); }
-            else if (i+1 === (shi>3?shi-3:shi+3)) { ctx.fillStyle="black"; ctx.fillText("應", 680, py + 35); }
+            // 修正：向右偏移文字
+            ctx.fillText(txt, 800, py + 35);
+            if (i+1 === shi) { ctx.fillStyle="blue"; ctx.fillText("世", 720, py + 35); }
+            else if (i+1 === (shi>3?shi-3:shi+3)) { ctx.fillStyle="black"; ctx.fillText("應", 720, py + 35); }
         }
 
-        // 繪製紅藍括號
         ctx.strokeStyle = "blue"; ctx.lineWidth = 3;
         ctx.beginPath(); ctx.moveTo(620, 400); ctx.lineTo(640, 400); ctx.lineTo(640, 650); ctx.lineTo(620, 650); ctx.stroke();
         ctx.fillStyle="blue"; ctx.font="28px Microsoft JhengHei"; ctx.fillText(`上卦：${un_n}(${un_s})`, 660, 530);
